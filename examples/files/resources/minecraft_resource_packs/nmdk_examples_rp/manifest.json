@@ -1,0 +1,30 @@
+{
+    "format_version": 2,
+    "header": {
+        "description": "Nmdk Examples Resource Pack - required for Nmdk Examples Mod.",
+        "name": "Nmdk Examples Resource Pack",
+        "uuid": "122fc256-d223-4974-bebc-ae9760370890",
+        "version": [
+            1,
+            0,
+            0
+        ],
+        "min_engine_version": [
+            1,
+            13,
+            0
+        ]
+    },
+    "modules": [
+        {
+            "description": "Nmdk Examples Resource Pack - required for Nmdk Examples Mod.",
+            "type": "resources",
+            "uuid": "17895f98-6914-40aa-89cf-b78af9f63cc2",
+            "version": [
+                1,
+                0,
+                0
+            ]
+        }
+    ]
+}

@@ -1,0 +1,12 @@
+{
+  "type": "preload-native",
+  "name": "NMDK Examples Mod",
+  "author": "NexCaise",
+  "version": "1.0.0",
+  "entry": "libnmdk_examples.so",
+  "minecraft_versions": [],
+  "overwrite_files": [],
+  "overwrite_folders": [
+    "resources/minecraft_resource_packs"
+  ]
+}
