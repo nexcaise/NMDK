@@ -8,10 +8,12 @@
 #include <nmdk/events/AppPlatform.hpp>
 #include <nmdk/events/ClientInstance.hpp>
 #include <nmdk/events/GeneralSettingsScreenController.hpp>
+#include <nmdk/events/Input.hpp>
 #include <nmdk/events/ResourcePackManager.hpp>
 
 #include "mc/deps/application/AppPlatform.h"
 #include "mc/deps/core/resource/ResourceLocation.h"
+#include "mc/deps/input/enums/ButtonState.h"
 #include "mc/resources/ResourcePackManager.h"
 #include "mc/world/actor/Actor.h"
 
@@ -93,17 +95,27 @@ bool NmdkExamples::enable() {
             g_inSettings.store(false);
         });
 
+    // 8) Log every touch glyph button press/release (id + state).
+    mIdTouchGlyph = bus.subscribe<TouchButtonGlyphEvent>(
+        [](TouchButtonGlyphEvent& event) {
+            ButtonState state = event.mIsDown ? ButtonState::Down : ButtonState::Up;
+            LOGI("TouchButtonGlyphEvent id=%u state=%s (%d)",
+                 event.mButtonId,
+                 event.mIsDown ? "Down" : "Up",
+                 static_cast<int>(state));
+        });
+
     if (mSelf) mSelf->getLogger().info("NmdkExamples enabled.");
 
     return mIdCreate && mIdAppPlatformInit && mIdClientInit && mIdAfterCompose
-        && mIdPreGame && mIdSettingsOpen && mIdBeforeExit;
+        && mIdPreGame && mIdSettingsOpen && mIdBeforeExit && mIdTouchGlyph;
 }
 
 bool NmdkExamples::disable() {
     auto& bus = nmdk::getEventBus();
 
     for (auto* id : {&mIdCreate, &mIdAppPlatformInit, &mIdClientInit, &mIdAfterCompose,
-                     &mIdPreGame, &mIdSettingsOpen, &mIdBeforeExit}) {
+                     &mIdPreGame, &mIdSettingsOpen, &mIdBeforeExit, &mIdTouchGlyph}) {
         if (*id != 0) {
             bus.unsubscribe(*id);
             *id = 0;

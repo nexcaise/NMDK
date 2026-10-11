@@ -22,4 +22,5 @@ private:
     nmdk::EventBus::ListenerId mIdSettingsOpen{};
     nmdk::EventBus::ListenerId mIdBeforeExit{};
     nmdk::EventBus::ListenerId mIdClientInit{};
+    nmdk::EventBus::ListenerId mIdTouchGlyph{};
 };
