@@ -1,0 +1,9 @@
+{
+  "type": "preload-native",
+  "name": "nmdk",
+  "entry": "libnmdk.so",
+  "description": "a SDK for create LeviLaunchroid mods",
+  "author": "NexCaise",
+  "icon": "",
+  "version": "${nmdk.version}"
+}

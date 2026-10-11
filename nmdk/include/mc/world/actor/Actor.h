@@ -6,14 +6,15 @@
 #include "mc/entity/components/ActorEquipmentComponent.h"
 #include "mc/entity/components/ActorGameTypeComponent.h"
 #include "mc/world/actor/ActorSwingSource.h"
+#include "mc/world/actor/provider/SynchedActorDataAccess.h"
 #include "mc/world/item/HandSlot.h"
 
 class Actor {
   public:
-    CLASS_FIELD(EntityContext, entityContext, 0x8);
+    CLASS_FIELD(EntityContext, mEntityContext, 0x8);
 
   public:
-    template <typename T> T *tryGetComponent() { return entityContext.enttRegistry.try_get<T>(entityContext.entity); }
+    template <typename T> T *tryGetComponent() { return mEntityContext.enttRegistry.try_get<T>(mEntityContext.entity); }
 
     ItemStackBase *getArmor(int slot) {
         return this->tryGetComponent<ActorEquipmentComponent>()->armorContainer->getItem(slot);
@@ -24,6 +25,20 @@ class Actor {
     }
 
     GameType getGameMode() { return this->tryGetComponent<ActorGameTypeComponent>()->mGameType; }
+
+    bool getStatusFlag(::ActorFlags flag) const { return SynchedActorDataAccess::getActorFlag(mEntityContext, flag); }
+
+    void setStatusFlag(::ActorFlags flag, bool value) {
+        SynchedActorDataAccess::setActorFlag(mEntityContext, flag, value);
+    }
+
+    [[nodiscard]] bool isSwimming() const { return getStatusFlag(::ActorFlags::Swimming); }
+    [[nodiscard]] bool isMoving() const { return getStatusFlag(::ActorFlags::Moving); }
+    [[nodiscard]] bool isSprinting() const { return getStatusFlag(::ActorFlags::Sprinting); }
+    [[nodiscard]] bool isSneaking() const { return getStatusFlag(::ActorFlags::Sneaking); }
+    [[nodiscard]] bool isCrawling() const { return getStatusFlag(::ActorFlags::Crawling); }
+    [[nodiscard]] bool isGliding() const { return getStatusFlag(::ActorFlags::Gliding); }
+    [[nodiscard]] bool isDancing() const { return getStatusFlag(::ActorFlags::Dancing); }
 
   public:
     bool swing(ActorSwingSource actorSwingSource, HandSlot handSlot);

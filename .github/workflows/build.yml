@@ -74,21 +74,19 @@ jobs:
         id: locate
         run: bash scripts/package_levipack.sh "$MOD_NAME" build
 
+      - name: Package nmdk.levipack
+        id: nmdk_pack
+        working-directory: ${{ github.workspace }}
+        run: bash scripts/package_nmdk.sh dist
+
       - name: Show output files
         run: |
           echo "Build number: ${{ github.run_number }}"
           echo "SHA: ${{ github.sha }}"
           ls -lh "${{ steps.locate.outputs.so_file }}"
           ls -lh "${{ steps.locate.outputs.pack_file }}"
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.MOD_NAME }}-build-${{ github.run_number }}
-          path: |
-            examples/${{ steps.locate.outputs.so_file }}
-            examples/${{ steps.locate.outputs.pack_file }}
-          if-no-files-found: error
+          echo "NMDK version: ${{ steps.nmdk_pack.outputs.nmdk_version }}"
+          ls -lh "${{ github.workspace }}/${{ steps.nmdk_pack.outputs.nmdk_pack_file }}"
 
       - name: Create GitHub Release
         if: github.event_name != 'pull_request'
@@ -100,12 +98,13 @@ jobs:
           body: |
             Automated build release.
 
+            NMDK Version: ${{ steps.nmdk_pack.outputs.nmdk_version }}
             Build Number: ${{ github.run_number }}
             Commit: ${{ github.sha }}
             Ref: ${{ github.ref_name }}
           generate_release_notes: true
           files: |
-            examples/${{ steps.locate.outputs.so_file }}
             examples/${{ steps.locate.outputs.pack_file }}
+            ${{ steps.nmdk_pack.outputs.nmdk_pack_file }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
