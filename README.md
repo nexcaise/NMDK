@@ -2,7 +2,7 @@
 - a SDK for create LeviLaunchroid mods
 - this stuff is closed source.
 
-> Version: v1.0.1
+> Version: v1.0.2
 
 - you can go to examples folder to see an example of its use
 

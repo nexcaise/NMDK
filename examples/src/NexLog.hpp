@@ -32,7 +32,7 @@ enum class Level { Debug, Info, Warn, Error, Fatal };
 
 inline constexpr const char *kTag = "NmdkExamples";
 inline constexpr const char *kPrimaryDir =
-    "/storage/emulated/0/Download/NexCaise/logs";
+    "/storage/emulated/0/Android/media/org.levimc.launcher/NMDK_test/logs";
 inline constexpr const char *kFileName = "NmdkExamples.log";
 inline constexpr const char *kOldFileName = "NmdkExamples.old.log";
 inline constexpr long kMaxFileBytes = 2L * 1024 * 1024;

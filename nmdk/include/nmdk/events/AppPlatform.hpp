@@ -6,10 +6,10 @@ class AppPlatformEvent {
   public:
     AppPlatform *mAppPlatform;
 
-    explicit AppPlatformEvent(AppPlatform *appPlatform);
+    explicit AppPlatformEvent(AppPlatform *appPlatform) : mAppPlatform(appPlatform) {}
 };
 
 class AppPlatformInitializeEvent : public AppPlatformEvent {
   public:
-    explicit AppPlatformInitializeEvent(AppPlatform *appPlatform);
+    explicit AppPlatformInitializeEvent(AppPlatform *appPlatform) : AppPlatformEvent(appPlatform) {}
 };

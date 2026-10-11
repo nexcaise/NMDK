@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+
 #pragma warning(disable : 4099)
 #pragma warning(disable : 4201)
 #pragma warning(disable : 4373)

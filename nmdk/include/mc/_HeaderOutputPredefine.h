@@ -79,6 +79,8 @@
 #include <variant>
 #include <vector>
 
+#include <entt/entt.hpp>
+
 namespace fs = std::filesystem;
 using scsclock = std::chrono::steady_clock;
 
