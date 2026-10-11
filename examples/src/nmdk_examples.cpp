@@ -21,6 +21,21 @@ static std::atomic<AppPlatform*>   g_appPlatform{nullptr};
 static std::atomic<ClientInstance*> g_clientInstance{nullptr};
 static std::atomic<bool>           g_inSettings{false};
 
+static const char* touchGlyphName(TouchButtonGlyphType type) {
+    switch (type) {
+    case TouchButtonGlyphType::Jump:          return "Jump";
+    case TouchButtonGlyphType::Sneak:         return "Sneak";
+    case TouchButtonGlyphType::BuildUse:      return "BuildUse";
+    case TouchButtonGlyphType::AttackDestroy: return "AttackDestroy";
+    case TouchButtonGlyphType::PickBlock:     return "PickBlock";
+    case TouchButtonGlyphType::Pause:         return "Pause";
+    case TouchButtonGlyphType::Chat:          return "Chat";
+    case TouchButtonGlyphType::Emote:         return "Emote";
+    case TouchButtonGlyphType::Perspective:   return "Perspective";
+    default:                                  return "Unknown";
+    }
+}
+
 NmdkExamples::NmdkExamples() : mSelf(ll::mod::NativeMod::current()) {}
 
 bool NmdkExamples::load() {
@@ -95,12 +110,13 @@ bool NmdkExamples::enable() {
             g_inSettings.store(false);
         });
 
-    // 8) Log every touch glyph button press/release (id + state).
+    // 8) Log every touch glyph button press/release (type + state).
     mIdTouchGlyph = bus.subscribe<TouchButtonGlyphEvent>(
         [](TouchButtonGlyphEvent& event) {
             ButtonState state = event.mIsDown ? ButtonState::Down : ButtonState::Up;
-            LOGI("TouchButtonGlyphEvent id=%u state=%s (%d)",
-                 event.mButtonId,
+            LOGI("TouchButtonGlyphEvent type=%s (%u) state=%s (%d)",
+                 touchGlyphName(event.mButtonType),
+                 static_cast<unsigned int>(event.mButtonType),
                  event.mIsDown ? "Down" : "Up",
                  static_cast<int>(state));
         });

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nmdk/api/Types.h"
+#include "mc/deps/input/enums/TouchButtonGlyphType.h"
 
 class InputEvent {
   public:
@@ -15,7 +15,7 @@ class CancelableInputEvent : public InputEvent {
 class TouchButtonGlyphEvent : public InputEvent {
   public:
     bool mIsDown;
-    uint mButtonId;
+    TouchButtonGlyphType mButtonType;
 
-    TouchButtonGlyphEvent(bool isDown, uint buttonId) : mIsDown(isDown), mButtonId(buttonId) {}
+    TouchButtonGlyphEvent(bool isDown, TouchButtonGlyphType buttonType) : mIsDown(isDown), mButtonType(buttonType) {}
 };
