@@ -4,6 +4,7 @@
 #include "mc/client/gui/screens/interfaces/ISceneStack.h"
 #include "mc/platform/brstd/function_ref.h"
 
+class Actor;
 class AbstractScene;
 class GuiData;
 class IOptionRegistry;
@@ -14,6 +15,7 @@ class ClientInstance {
     GuiData *getGuiData();
 
   public:
+    Actor *getLocalPlayer();
     ResourcePackManager &getResourcePackManager() const;
     ::IOptionRegistry &getOptions();
     Bedrock::NotNullNonOwnerPtr<ISceneStack> getCurrentSceneStack();

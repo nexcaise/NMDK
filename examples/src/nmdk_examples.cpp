@@ -13,6 +13,7 @@
 #include "mc/deps/application/AppPlatform.h"
 #include "mc/deps/core/resource/ResourceLocation.h"
 #include "mc/resources/ResourcePackManager.h"
+#include "mc/world/actor/Actor.h"
 
 static std::atomic<AppPlatform*>   g_appPlatform{nullptr};
 static std::atomic<ClientInstance*> g_clientInstance{nullptr};
@@ -53,7 +54,8 @@ bool NmdkExamples::enable() {
     mIdAfterCompose = bus.subscribe<ResourcePackManagerAfterComposeFullStackEvent>(
         [](ResourcePackManagerAfterComposeFullStackEvent&) {
             AppPlatform* platform = g_appPlatform.load();
-            if (platform != nullptr) {
+            ClientInstance* client = g_clientInstance.load();
+            if (platform != nullptr && client != nullptr && client->getLocalPlayer() != nullptr) {
                 platform->_fireAppSuspended();
                 platform->_fireAppResumed();
             }

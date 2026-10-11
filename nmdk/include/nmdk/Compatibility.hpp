@@ -1,6 +1,3 @@
-// Originally from preloader-android - github.com/LiteLDev
-// Modified
-
 #pragma once
 
 #include "nmdk/Hook.hpp"
