@@ -9,7 +9,9 @@
 ## Credits
 
 - [LiteLDev](https://github.com/LiteLDev) - we have used the headers from levilamina and used them as a reference as well
+- [Kitsuri-Studios/gamepwnage](https://github.com/Kitsuri-Studios/gamepwnage) - cross-platform memory hooking library (BSD-3-Clause) that backs NMDK's hook, memory, signature, patch and vtable primitives
 
 ## Features:
 - Events System
 - some headers that actually work
+- gamepwnage wrapper

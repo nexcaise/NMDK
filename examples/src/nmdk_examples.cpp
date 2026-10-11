@@ -1,10 +1,22 @@
 #include "nmdk_examples.hpp"
+#include "NexLog.hpp"
+
+#include <atomic>
+#include <string>
 
 #include <nmdk/NMDK.hpp>
 #include <nmdk/events/AppPlatform.hpp>
 #include <nmdk/events/ClientInstance.hpp>
 #include <nmdk/events/GeneralSettingsScreenController.hpp>
 #include <nmdk/events/ResourcePackManager.hpp>
+
+#include "mc/deps/application/AppPlatform.h"
+#include "mc/deps/core/resource/ResourceLocation.h"
+#include "mc/resources/ResourcePackManager.h"
+
+static std::atomic<AppPlatform*>   g_appPlatform{nullptr};
+static std::atomic<ClientInstance*> g_clientInstance{nullptr};
+static std::atomic<bool>           g_inSettings{false};
 
 NmdkExamples::NmdkExamples() : mSelf(ll::mod::NativeMod::current()) {}
 
@@ -27,54 +39,68 @@ bool NmdkExamples::enable() {
 
     // 2) Save AppPlatform when initialized.
     mIdAppPlatformInit = bus.subscribe<AppPlatformInitializeEvent>(
-        [this](AppPlatformInitializeEvent& event) {
-            mAppPlatform.store(event.mAppPlatform);
+        [](AppPlatformInitializeEvent& event) {
+            g_appPlatform.store(event.mAppPlatform);
         });
 
-    // 3) After the full stack compose is complete: suspend and then resume the app
-    // (forces the game to reload) if the AppPlatform has been saved.
+    // 3) Save ClientInstance (used for testing resource pack).
+    mIdClientInit = bus.subscribe<ClientInstanceInitFinishedEvent>(
+        [](ClientInstanceInitFinishedEvent& event) {
+            if (g_clientInstance.load() == nullptr) g_clientInstance.store(event.mClient);
+        });
+
+    // 4) After full stack compose is complete: suspend then resume app for reloading the game.
     mIdAfterCompose = bus.subscribe<ResourcePackManagerAfterComposeFullStackEvent>(
-        [this](ResourcePackManagerAfterComposeFullStackEvent&) {
-            AppPlatform* platform = mAppPlatform.load();
+        [](ResourcePackManagerAfterComposeFullStackEvent&) {
+            AppPlatform* platform = g_appPlatform.load();
             if (platform != nullptr) {
                 platform->_fireAppSuspended();
                 platform->_fireAppResumed();
             }
         });
 
-    // 4) While inside settings, force isPreGame = true.
-    // Outside settings, the listener doesn't change anything -> the default value is used.
-
-    // Its use is also to display the Active/Deactive button in the In game in the global resource pack settings.
+    // 5) While inside settings, force isPreGame = true.
+    // Outside settings, it doesn't change anything -> the default value is used.
+    // Useful for making Active/Deactive Buttons appear ingame in global packs settings
     mIdPreGame = bus.subscribe<ClientInstanceIsPreGameEvent>(
-        [this](ClientInstanceIsPreGameEvent& event) {
-            if (mInSettings.load()) {
+        [](ClientInstanceIsPreGameEvent& event) {
+            if (g_inSettings.load()) {
                 event.setIsPreGame(true);
             }
         });
 
-    // 5) Go to settings -> enable override.
+    // 6) Go to settings: enable override isPreGame + test read resource pack.
     mIdSettingsOpen = bus.subscribe<GeneralSettingsScreenControllerOnOpenEvent>(
-        [this](GeneralSettingsScreenControllerOnOpenEvent&) {
-            mInSettings.store(true);
+        [](GeneralSettingsScreenControllerOnOpenEvent&) {
+            g_inSettings.store(true);
+
+            ClientInstance* client = g_clientInstance.load();
+            if (client != nullptr) {
+                ResourcePackManager& resourcePackManager = client->getResourcePackManager();
+                std::string textOut;
+                bool loaded = resourcePackManager.load(ResourceLocation("nmdk_test/text.txt"), textOut);
+                if (loaded) {
+                    LOGI("NmdkExamples resource pack text: %s", textOut.c_str());
+                }
+            }
         });
 
-    // 6) Exit settings -> return to default.
+    // 7) Exit settings: return to default.
     mIdBeforeExit = bus.subscribe<GeneralSettingsScreenControllerBeforeExitEvent>(
-        [this](GeneralSettingsScreenControllerBeforeExitEvent&) {
-            mInSettings.store(false);
+        [](GeneralSettingsScreenControllerBeforeExitEvent&) {
+            g_inSettings.store(false);
         });
 
     if (mSelf) mSelf->getLogger().info("NmdkExamples enabled.");
 
-    return mIdCreate && mIdAppPlatformInit && mIdAfterCompose
+    return mIdCreate && mIdAppPlatformInit && mIdClientInit && mIdAfterCompose
         && mIdPreGame && mIdSettingsOpen && mIdBeforeExit;
 }
 
 bool NmdkExamples::disable() {
     auto& bus = nmdk::getEventBus();
 
-    for (auto* id : {&mIdCreate, &mIdAppPlatformInit, &mIdAfterCompose,
+    for (auto* id : {&mIdCreate, &mIdAppPlatformInit, &mIdClientInit, &mIdAfterCompose,
                      &mIdPreGame, &mIdSettingsOpen, &mIdBeforeExit}) {
         if (*id != 0) {
             bus.unsubscribe(*id);
@@ -82,8 +108,9 @@ bool NmdkExamples::disable() {
         }
     }
 
-    mInSettings.store(false);
-    mAppPlatform.store(nullptr);
+    g_inSettings.store(false);
+    g_appPlatform.store(nullptr);
+    g_clientInstance.store(nullptr);
 
     if (mSelf) mSelf->getLogger().info("NmdkExamples disabled.");
     return true;
