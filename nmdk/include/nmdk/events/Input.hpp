@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mc/deps/input/enums/TouchButtonGlyphType.h"
+#include "mc/deps/input/enums/MinecraftInputType.h"
 
 class InputEvent {
   public:
@@ -15,7 +15,15 @@ class CancelableInputEvent : public InputEvent {
 class TouchButtonGlyphEvent : public InputEvent {
   public:
     bool mIsDown;
-    TouchButtonGlyphType mButtonType;
+    MinecraftInputType mInputType;
 
-    TouchButtonGlyphEvent(bool isDown, TouchButtonGlyphType buttonType) : mIsDown(isDown), mButtonType(buttonType) {}
+    TouchButtonGlyphEvent(bool isDown, MinecraftInputType inputType) : mIsDown(isDown), mInputType(inputType) {}
+};
+
+class TapEvent : public InputEvent {
+  public:
+    bool mIsDown;
+    MinecraftInputType mInputType;
+
+    TapEvent(bool isDown, MinecraftInputType inputType) : mIsDown(isDown), mInputType(inputType) {}
 };

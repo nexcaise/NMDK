@@ -1,5 +1,7 @@
 #pragma once
 
+#if NMDK_HAS_ENTT
+
 #include "mc/deps/ecs/EntityId.h"
 
 struct EntityIdTraits {
@@ -11,3 +13,9 @@ struct EntityIdTraits {
     static constexpr entity_type entity_mask = 0x3FFFF;
     static constexpr entity_type version_mask = 0x3FFF;
 };
+
+#else
+
+struct EntityIdTraits {};
+
+#endif

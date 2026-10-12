@@ -79,7 +79,12 @@
 #include <variant>
 #include <vector>
 
+#if __has_include(<entt/entt.hpp>)
 #include <entt/entt.hpp>
+#define NMDK_HAS_ENTT 1
+#else
+#define NMDK_HAS_ENTT 0
+#endif
 
 namespace fs = std::filesystem;
 using scsclock = std::chrono::steady_clock;

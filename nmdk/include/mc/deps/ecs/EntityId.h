@@ -2,6 +2,8 @@
 
 #include "mc/_HeaderOutputPredefine.h"
 
+#if NMDK_HAS_ENTT
+
 struct EntityId {
     uint rawId;
 
@@ -9,3 +11,9 @@ struct EntityId {
 
     [[nodiscard]] constexpr operator uint() const { return this->rawId; }
 };
+
+#else
+
+struct EntityId {};
+
+#endif

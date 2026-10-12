@@ -10,6 +10,7 @@
 #include "mc/world/item/HandSlot.h"
 
 class Actor {
+#if NMDK_HAS_ENTT
   public:
     CLASS_FIELD(EntityContext, mEntityContext, 0x8);
 
@@ -26,10 +27,22 @@ class Actor {
 
     GameType getGameMode() { return this->tryGetComponent<ActorGameTypeComponent>()->mGameType; }
 
-    bool getStatusFlag(::ActorFlags flag) const { return SynchedActorDataAccess::getActorFlag(mEntityContext, flag); }
+#else
+  public:
+    template <typename T> T *tryGetComponent() { return nullptr; }
+
+    ::ItemStackBase *getArmor(int slot) { return nullptr; }
+
+    ::ItemStackBase *getHand(int slot) { return nullptr; }
+
+    ::GameType getGameMode() { return ::GameType::Undefined; }
+
+#endif
+
+    bool getStatusFlag(::ActorFlags flag) const { return ::SynchedActorDataAccess::getActorFlag(mEntityContext, flag); }
 
     void setStatusFlag(::ActorFlags flag, bool value) {
-        SynchedActorDataAccess::setActorFlag(mEntityContext, flag, value);
+        ::SynchedActorDataAccess::setActorFlag(mEntityContext, flag, value);
     }
 
     [[nodiscard]] bool isSwimming() const { return getStatusFlag(::ActorFlags::Swimming); }
@@ -41,5 +54,5 @@ class Actor {
     [[nodiscard]] bool isDancing() const { return getStatusFlag(::ActorFlags::Dancing); }
 
   public:
-    bool swing(ActorSwingSource actorSwingSource, HandSlot handSlot);
+    bool swing(::ActorSwingSource actorSwingSource, ::HandSlot handSlot);
 };

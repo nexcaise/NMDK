@@ -1,6 +1,9 @@
 #pragma once
 
 #include "mc/_HeaderOutputPredefine.h"
+
+#if NMDK_HAS_ENTT
+
 #include "mc/deps/core/utility/optional_ref.h"
 #include "mc/deps/ecs/EntityIdTraits.h"
 #include "mc/deps/ecs/IEntityComponent.h"
@@ -65,3 +68,10 @@ class EntityContext {
         return getRegistry().get_or_emplace<T>(entity, std::forward<Args>(args)...);
     }
 };
+
+#else
+
+struct EntityRegistry {};
+struct EntityContext {};
+
+#endif
