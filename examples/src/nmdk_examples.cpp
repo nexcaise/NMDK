@@ -21,17 +21,17 @@ static std::atomic<AppPlatform*>   g_appPlatform{nullptr};
 static std::atomic<ClientInstance*> g_clientInstance{nullptr};
 static std::atomic<bool>           g_inSettings{false};
 
-static const char* touchGlyphName(TouchButtonGlyphType type) {
+static const char* touchGlyphName(MinecraftInputType type) {
     switch (type) {
-    case TouchButtonGlyphType::Jump:          return "Jump";
-    case TouchButtonGlyphType::Sneak:         return "Sneak";
-    case TouchButtonGlyphType::BuildUse:      return "BuildUse";
-    case TouchButtonGlyphType::AttackDestroy: return "AttackDestroy";
-    case TouchButtonGlyphType::PickBlock:     return "PickBlock";
-    case TouchButtonGlyphType::Pause:         return "Pause";
-    case TouchButtonGlyphType::Chat:          return "Chat";
-    case TouchButtonGlyphType::Emote:         return "Emote";
-    case TouchButtonGlyphType::Perspective:   return "Perspective";
+    case MinecraftInputType::Jump:          return "Jump";
+    case MinecraftInputType::Sneak:         return "Sneak";
+    case MinecraftInputType::BuildUse:      return "BuildUse";
+    case MinecraftInputType::AttackDestroy: return "AttackDestroy";
+    case MinecraftInputType::PickBlock:     return "PickBlock";
+    case MinecraftInputType::Pause:         return "Pause";
+    case MinecraftInputType::Chat:          return "Chat";
+    case MinecraftInputType::Emote:         return "Emote";
+    case MinecraftInputType::Perspective:   return "Perspective";
     default:                                  return "Unknown";
     }
 }
@@ -115,8 +115,8 @@ bool NmdkExamples::enable() {
         [](TouchButtonGlyphEvent& event) {
             ButtonState state = event.mIsDown ? ButtonState::Down : ButtonState::Up;
             LOGI("TouchButtonGlyphEvent type=%s (%u) state=%s (%d)",
-                 touchGlyphName(event.mButtonType),
-                 static_cast<unsigned int>(event.mButtonType),
+                 touchGlyphName(event.mInputType),
+                 static_cast<unsigned int>(event.mInputType),
                  event.mIsDown ? "Down" : "Up",
                  static_cast<int>(state));
         });
