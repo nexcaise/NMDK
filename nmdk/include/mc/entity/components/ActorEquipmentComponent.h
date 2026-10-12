@@ -14,5 +14,7 @@ struct ActorEquipmentComponent : IEntityComponent {
     Container *handContainer;
     Container *armorContainer;
 };
+#else
+#include "mc/world/item/ItemStackBase.h"
 
 #endif
