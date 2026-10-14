@@ -22,7 +22,6 @@ class Library {
     [[nodiscard]] const std::string &name() const noexcept { return mName; }
     [[nodiscard]] address_t base(std::string_view permissions = {}) const noexcept;
     [[nodiscard]] std::vector<ModuleRegion> regions() const;
-    [[nodiscard]] address_t symbol(std::string_view symbolName) const noexcept;
     [[nodiscard]] explicit operator bool() const noexcept { return base() != 0; }
 
   private:

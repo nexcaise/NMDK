@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nmdk/Memory.hpp"
+#include "nmdk/Types.hpp"
 
 #include <cstddef>
 #include <string_view>

@@ -1,10 +1,7 @@
-// Originally from preloader-android - github.com/LiteLDev
-// Modified
-
 #pragma once
 
-#include "nmdk/Hook.hpp"
-#include "nmdk/Signature.hpp"
+#include "nmdk/HookRegistry.hpp"
+#include "nmdk/MemoryScanner.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -137,8 +134,6 @@ template <typename T> struct HookAutoRegister {
 #define VA_EXPAND(...) __VA_ARGS__
 #endif
 
-// Native nmdk typed-hook macros. These mirror the preloader hook
-// declaration model while resolving and installing hooks through nmdk.
 #define NMDK_HOOK_IMPL(REGISTER, FUNC_PTR, STATIC, CALL, DEF_TYPE, TYPE, PRIORITY, IDENTIFIER, MODULE, RET_TYPE, ...)  \
     struct DEF_TYPE TYPE {                                                                                             \
         using FuncPtr = ::nmdk::memory::FuncPtr;                                                                       \
@@ -148,7 +143,7 @@ template <typename T> struct HookAutoRegister {
                                                                                                                        \
         inline static FuncPtr target{};                                                                                \
         inline static OriginFuncType originFunc{};                                                                     \
-        inline static std::unique_ptr<::nmdk::InlineHook> hookHandle{};                                                \
+        inline static std::uint64_t hookId{};                                                                          \
                                                                                                                        \
         template <typename... Args> STATIC RET_TYPE origin(Args &&...params) {                                         \
             return CALL(std::forward<Args>(params)...);                                                                \
@@ -156,7 +151,11 @@ template <typename T> struct HookAutoRegister {
                                                                                                                        \
         STATIC RET_TYPE detour(__VA_ARGS__);                                                                           \
                                                                                                                        \
-        static bool installed() noexcept { return hookHandle && hookHandle->installed() && originFunc != nullptr; }    \
+        static void setOriginal(void *, void *next) {                                                                  \
+            originFunc = ::nmdk::memory::fromOriginal<OriginFuncType>(next);                                           \
+        }                                                                                                              \
+                                                                                                                       \
+        static bool installed() noexcept { return hookId != 0; }                                                       \
                                                                                                                        \
         static int hook() {                                                                                            \
             if (installed())                                                                                           \
@@ -164,27 +163,24 @@ template <typename T> struct HookAutoRegister {
             target = ::nmdk::memory::resolveIdentifier<OriginFuncType>(IDENTIFIER, MODULE);                            \
             if (!target)                                                                                               \
                 return -1;                                                                                             \
-            auto handle = std::make_unique<::nmdk::InlineHook>(                                                        \
-                reinterpret_cast<void *>(target),                                                                      \
-                reinterpret_cast<void *>(::nmdk::memory::toFuncPtr(&DEF_TYPE::detour)));                               \
-            if (!handle->installed() || !handle->original()) {                                                         \
-                hookHandle.reset();                                                                                    \
+            hookId =                                                                                                   \
+                ::nmdk::HookRegistry::install(reinterpret_cast<void *>(target),                                        \
+                                              reinterpret_cast<void *>(::nmdk::memory::toFuncPtr(&DEF_TYPE::detour)),  \
+                                              static_cast<int>(PRIORITY), &DEF_TYPE::setOriginal, nullptr);            \
+            if (!hookId) {                                                                                             \
                 target = nullptr;                                                                                      \
-                originFunc = {};                                                                                       \
                 return -2;                                                                                             \
             }                                                                                                          \
-            originFunc = ::nmdk::memory::fromOriginal<OriginFuncType>(handle->original());                             \
-            hookHandle = std::move(handle);                                                                            \
-            (void)sizeof(PRIORITY);                                                                                    \
             return 0;                                                                                                  \
         }                                                                                                              \
                                                                                                                        \
         static bool unhook() {                                                                                         \
-            if (!hookHandle)                                                                                           \
+            if (!hookId)                                                                                               \
                 return false;                                                                                          \
-            hookHandle.reset();                                                                                        \
+            ::nmdk::HookRegistry::remove(hookId);                                                                      \
+            hookId = 0;                                                                                                \
+                                                                                                                       \
             target = nullptr;                                                                                          \
-            originFunc = {};                                                                                           \
             return true;                                                                                               \
         }                                                                                                              \
     };                                                                                                                 \
@@ -231,3 +227,43 @@ template <typename T> struct HookAutoRegister {
 
 #define NMDK_AUTO_INSTANCE_HOOK(DEF_TYPE, PRIORITY, IDENTIFIER, MODULE, RET_TYPE, ...)                                 \
     VA_EXPAND(NMDK_AUTO_INSTANCE_HOOK_IMPL(DEF_TYPE, , PRIORITY, IDENTIFIER, MODULE, RET_TYPE, __VA_ARGS__))
+
+#define NMDK_PLT_HOOK_IMPL(REGISTER, DEF_TYPE, PRIORITY, SYMBOL, MODULE, RET_TYPE, ...)                                \
+    struct DEF_TYPE {                                                                                                  \
+        using FuncPtr = ::nmdk::memory::FuncPtr;                                                                       \
+        using OriginFuncType = RET_TYPE (*)(__VA_ARGS__);                                                              \
+        inline static OriginFuncType originFunc{};                                                                     \
+        inline static std::uint64_t hookId{};                                                                          \
+        template <typename... Args> static RET_TYPE origin(Args &&...params) {                                         \
+            return originFunc(std::forward<Args>(params)...);                                                          \
+        }                                                                                                              \
+        static RET_TYPE detour(__VA_ARGS__);                                                                           \
+        static void setOriginal(void *, void *next) {                                                                  \
+            originFunc = ::nmdk::memory::fromOriginal<OriginFuncType>(next);                                           \
+        }                                                                                                              \
+        static bool installed() noexcept { return hookId != 0; }                                                       \
+        static int hook() {                                                                                            \
+            if (installed())                                                                                           \
+                return 0;                                                                                              \
+            hookId = ::nmdk::HookRegistry::installPlt(MODULE, SYMBOL, ::nmdk::memory::toFuncPtr(&DEF_TYPE::detour),    \
+                                                      static_cast<int>(PRIORITY), &DEF_TYPE::setOriginal, nullptr);    \
+            return hookId ? 0 : -1;                                                                                    \
+        }                                                                                                              \
+        static bool unhook() {                                                                                         \
+            if (!hookId)                                                                                               \
+                return false;                                                                                          \
+            if (!::nmdk::HookRegistry::remove(hookId))                                                                 \
+                return false;                                                                                          \
+            hookId = 0;                                                                                                \
+            return true;                                                                                               \
+        }                                                                                                              \
+    };                                                                                                                 \
+    REGISTER;                                                                                                          \
+    RET_TYPE DEF_TYPE::detour(__VA_ARGS__)
+
+#define NMDK_PLT_HOOK(DEF_TYPE, PRIORITY, SYMBOL, MODULE, RET_TYPE, ...)                                               \
+    VA_EXPAND(NMDK_PLT_HOOK_IMPL(, DEF_TYPE, PRIORITY, SYMBOL, MODULE, RET_TYPE, __VA_ARGS__))
+
+#define NMDK_AUTO_PLT_HOOK(DEF_TYPE, PRIORITY, SYMBOL, MODULE, RET_TYPE, ...)                                          \
+    VA_EXPAND(NMDK_PLT_HOOK_IMPL(inline ::nmdk::memory::HookAutoRegister<DEF_TYPE> DEF_TYPE##AutoRegister, DEF_TYPE,   \
+                                 PRIORITY, SYMBOL, MODULE, RET_TYPE, __VA_ARGS__))
