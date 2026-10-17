@@ -9,4 +9,4 @@ set_target_properties(nmdk PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/nmdk/include"
 )
 
-add_library(NMDK::NMDK ALIAS nmdk)
+add_library(NEXCAISE::NMDK ALIAS nmdk)

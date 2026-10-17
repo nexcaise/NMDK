@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <initializer_list>
 #include <memory>
 #include <type_traits>
@@ -14,13 +15,7 @@ namespace nmdk::memory {
 
 using FuncPtr = void *;
 
-enum class HookPriority : int {
-    Lowest = -100,
-    Low = -50,
-    Normal = 0,
-    High = 50,
-    Highest = 100,
-};
+using HookPriority = ::nmdk::HookPriority;
 
 template <typename T> struct IsConstMemberFun : std::false_type {};
 template <typename T, typename Ret, typename... Args>
@@ -43,26 +38,18 @@ concept FuncPtrType = std::is_function_v<std::remove_pointer_t<T>> || std::is_me
 template <typename T>
     requires(sizeof(T) == sizeof(FuncPtr))
 inline FuncPtr toFuncPtr(T value) noexcept {
-    union {
-        FuncPtr fp;
-        T value;
-    } storage{};
-    storage.value = value;
-    return storage.fp;
+    FuncPtr fp;
+    std::memcpy(&fp, &value, sizeof(fp));
+    return fp;
 }
 
+// Itanium ABI member pointer: { function address, this-adjustment }.
 template <typename T>
     requires(std::is_member_function_pointer_v<T> && sizeof(T) == sizeof(FuncPtr) + sizeof(std::ptrdiff_t))
 inline FuncPtr toFuncPtr(T value) noexcept {
-    union {
-        struct {
-            FuncPtr fp;
-            std::ptrdiff_t offset;
-        };
-        T value;
-    } storage{};
-    storage.value = value;
-    return storage.fp;
+    FuncPtr fp;
+    std::memcpy(&fp, &value, sizeof(fp));
+    return fp;
 }
 
 template <typename T>
@@ -74,16 +61,13 @@ inline T fromFuncPtr(FuncPtr value) noexcept {
 template <typename T>
     requires(std::is_member_function_pointer_v<T> && sizeof(T) == sizeof(FuncPtr) + sizeof(std::ptrdiff_t))
 inline T fromFuncPtr(FuncPtr value) noexcept {
-    union {
-        struct {
-            FuncPtr fp;
-            std::ptrdiff_t offset;
-        };
-        T value;
-    } storage{};
-    storage.fp = value;
-    storage.offset = 0;
-    return storage.value;
+    struct Raw {
+        FuncPtr fp;
+        std::ptrdiff_t offset;
+    } raw{value, 0};
+    T result;
+    std::memcpy(&result, &raw, sizeof(result));
+    return result;
 }
 
 FuncPtr resolveSignature(const char *identifier, const char *moduleName) noexcept;
@@ -156,6 +140,13 @@ template <typename T> struct HookAutoRegister {
         }                                                                                                              \
                                                                                                                        \
         static bool installed() noexcept { return hookId != 0; }                                                       \
+        static bool enabled() noexcept { return hookId != 0 && ::nmdk::HookRegistry::info(hookId).enabled; }           \
+        static bool setEnabled(bool on) noexcept {                                                                     \
+            return hookId != 0 && ::nmdk::HookRegistry::setEnabled(hookId, on);                                        \
+        }                                                                                                              \
+        static bool setPriority(HookPriority priority) noexcept {                                                      \
+            return hookId != 0 && ::nmdk::HookRegistry::setPriority(hookId, priority);                                 \
+        }                                                                                                              \
                                                                                                                        \
         static int hook() {                                                                                            \
             if (installed())                                                                                           \
@@ -231,6 +222,7 @@ template <typename T> struct HookAutoRegister {
 #define NMDK_PLT_HOOK_IMPL(REGISTER, DEF_TYPE, PRIORITY, SYMBOL, MODULE, RET_TYPE, ...)                                \
     struct DEF_TYPE {                                                                                                  \
         using FuncPtr = ::nmdk::memory::FuncPtr;                                                                       \
+        using HookPriority = ::nmdk::memory::HookPriority;                                                             \
         using OriginFuncType = RET_TYPE (*)(__VA_ARGS__);                                                              \
         inline static OriginFuncType originFunc{};                                                                     \
         inline static std::uint64_t hookId{};                                                                          \
@@ -242,6 +234,13 @@ template <typename T> struct HookAutoRegister {
             originFunc = ::nmdk::memory::fromOriginal<OriginFuncType>(next);                                           \
         }                                                                                                              \
         static bool installed() noexcept { return hookId != 0; }                                                       \
+        static bool enabled() noexcept { return hookId != 0 && ::nmdk::HookRegistry::info(hookId).enabled; }           \
+        static bool setEnabled(bool on) noexcept {                                                                     \
+            return hookId != 0 && ::nmdk::HookRegistry::setEnabled(hookId, on);                                        \
+        }                                                                                                              \
+        static bool setPriority(HookPriority priority) noexcept {                                                      \
+            return hookId != 0 && ::nmdk::HookRegistry::setPriority(hookId, priority);                                 \
+        }                                                                                                              \
         static int hook() {                                                                                            \
             if (installed())                                                                                           \
                 return 0;                                                                                              \
