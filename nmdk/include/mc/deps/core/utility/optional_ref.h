@@ -1,4 +1,3 @@
-// From LeviLamina - https://github.com/LiteLDev/LeviLamina/blob/main/src/mc/deps/core/utility/optional_ref.h
 
 #pragma once
 
@@ -16,7 +15,6 @@
 template <typename T> class optional_ref {
   private:
     T *mPtr = nullptr;
-    // NOLINTBEGIN
     static_assert(!std::is_reference_v<T>);
 
   public:
@@ -153,7 +151,6 @@ template <typename T> class optional_ref {
         }
     }
 };
-// NOLINTEND
 template <typename T> optional_ref(T const &) -> optional_ref<T const>;
 
 template <typename T> optional_ref(T &) -> optional_ref<T>;

@@ -6,12 +6,6 @@
 
 namespace nmdk {
 
-/**
- * Chain ordering. A HIGHER value runs EARLIER (outermost): it sees the call
- * first and decides whether to call origin() (which continues down the chain).
- * Hooks with equal priority run in registration order (first registered first).
- * Any int is a valid priority; these are just named anchors.
- */
 enum class HookPriority : int {
     Lowest = -100,
     Low = -50,
@@ -28,39 +22,19 @@ constexpr HookPriority operator-(HookPriority p, int d) noexcept {
 }
 
 struct HookInfo {
-    bool valid{};   // false if the id is unknown
-    bool enabled{}; // participates in the chain
-    bool plt{};     // PLT/GOT hook instead of inline hook
+    bool valid{};
+    bool enabled{};
+    bool plt{};
     int priority{};
-    std::size_t position{};  // 0 = runs first (index in the full ordered chain)
-    std::size_t chainSize{}; // all registered hooks on the same point
+    std::size_t position{};
+    std::size_t chainSize{};
 };
 
-/**
- * Hook chain manager.
- *
- * Any number of detours can hook the same function (inline) or the same
- * imported symbol (PLT). They form a chain ordered by priority:
- *
- *     caller -> detour(prio 100) -> detour(prio 0) -> detour(prio -50) -> original
- *
- * Each detour reaches the next one through its own `origin()`; the registry
- * delivers that "next" pointer through the Setter. A detour may skip origin()
- * to short-circuit everything below it.
- *
- * Install/remove/reorder/enable are serialised internally and safe to call
- * from any thread, also while the hooked function is running. A call that is
- * already inside a detour finishes on the chain it entered.
- *
- * install*() return a non-zero id, or 0 on failure (bad argument, target not
- * hookable, or the same detour is already on that target).
- */
 class HookRegistry {
   public:
     using HookId = std::uint64_t;
     using Setter = void (*)(void *ctx, void *original);
 
-    // ---- install -------------------------------------------------------
     static HookId install(void *target, void *detour, int priority, Setter setter, void *ctx) noexcept;
     static HookId install(void *target, void *detour, int priority, void **originalSlot) noexcept;
 
@@ -93,21 +67,16 @@ class HookRegistry {
         return installPlt(moduleName, symbolName, detour, priority, originalSlot);
     }
 
-    // ---- manage --------------------------------------------------------
     static bool remove(HookId id) noexcept;
     static bool remove(void *target, void *detour) noexcept;
 
-    /// Temporarily take a hook out of the chain (or put it back) without
-    /// losing its slot. A disabled hook is skipped; its neighbours link past it.
     static bool setEnabled(HookId id, bool enabled) noexcept;
 
-    /// Move a hook to a new priority (lands after existing hooks of equal priority).
     static bool setPriority(HookId id, int priority) noexcept;
     static bool setPriority(HookId id, HookPriority priority) noexcept {
         return setPriority(id, static_cast<int>(priority));
     }
 
-    // ---- query ---------------------------------------------------------
     [[nodiscard]] static HookInfo info(HookId id) noexcept;
     [[nodiscard]] static std::size_t chainSize(void *target) noexcept;
     [[nodiscard]] static bool isHooked(void *target) noexcept;
@@ -115,7 +84,6 @@ class HookRegistry {
     [[nodiscard]] static bool isPltHooked(const char *moduleName, const char *symbolName) noexcept;
 };
 
-/// RAII owner of one hook id; removes the hook on destruction.
 class ScopedHook {
   public:
     ScopedHook() = default;

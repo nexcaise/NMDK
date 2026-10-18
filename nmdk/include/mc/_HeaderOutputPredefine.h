@@ -92,14 +92,14 @@ using scsclock = std::chrono::steady_clock;
 template <std::size_t IIdx, typename TRet, typename... TArgs>
 static TRet callVirtualFunc(void *thisptr, TArgs... args) {
     using Fn = TRet (*)(void *, TArgs...);
-    return (*reinterpret_cast<Fn **>(thisptr))[IIdx](thisptr, args...);
+    return (*reinterpret_cast<Fn **>(thisptr))[IIdx](thisptr, std::forward<TArgs>(args)...);
 }
 
 template <std::size_t IIdx, typename TRet, typename... TArgs>
 static TRet callVirtualFunc(const void *thisptr, TArgs... args) {
     using Fn = TRet (*)(void *, TArgs...);
     auto ptr = const_cast<void *>(thisptr);
-    return (*reinterpret_cast<Fn **>(ptr))[IIdx](ptr, args...);
+    return (*reinterpret_cast<Fn **>(ptr))[IIdx](ptr, std::forward<TArgs>(args)...);
 }
 
 struct Vec2 final {

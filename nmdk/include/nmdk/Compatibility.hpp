@@ -43,7 +43,6 @@ inline FuncPtr toFuncPtr(T value) noexcept {
     return fp;
 }
 
-// Itanium ABI member pointer: { function address, this-adjustment }.
 template <typename T>
     requires(std::is_member_function_pointer_v<T> && sizeof(T) == sizeof(FuncPtr) + sizeof(std::ptrdiff_t))
 inline FuncPtr toFuncPtr(T value) noexcept {

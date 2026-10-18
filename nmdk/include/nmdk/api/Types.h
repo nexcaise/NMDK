@@ -1,4 +1,3 @@
-// From LeviLamina - https://github.com/LiteLDev/LeviLamina/blob/main/src/ll/api/base/StdInt.h
 
 #pragma once
 

@@ -7,4 +7,6 @@ class ResourceLocation;
 class ResourcePackManager {
   public:
     bool load(::ResourceLocation const &resourceLocation, ::std::string &resourceStream) const;
+
+    void _composeFullStack();
 };

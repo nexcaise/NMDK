@@ -4,9 +4,7 @@
 
 #include "mc/world/actor/ActorFlags.h"
 
-// clang-format off
 class EntityContext;
-// clang-format on
 
 namespace SynchedActorDataAccess {
 

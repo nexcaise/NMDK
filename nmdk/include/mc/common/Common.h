@@ -11,4 +11,4 @@ namespace Common {
 
 ::Common::StringConstants _buildStringConstants();
 
-} // namespace Common
+}

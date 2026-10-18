@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mc/_HeaderOutputPredefine.h"
+#include "mc/client/game/MinecraftGame.h"
 #include "mc/client/gui/screens/interfaces/ISceneStack.h"
 #include "mc/platform/brstd/function_ref.h"
 
@@ -16,6 +17,7 @@ class ClientInstance {
 
   public:
     Actor *getLocalPlayer();
+    MinecraftGame &getMinecraftGame() const;
     ResourcePackManager &getResourcePackManager() const;
     ::IOptionRegistry &getOptions();
     Bedrock::NotNullNonOwnerPtr<ISceneStack> getCurrentSceneStack();

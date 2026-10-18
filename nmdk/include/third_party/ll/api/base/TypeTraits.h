@@ -1,4 +1,3 @@
-// From LeviLamina - github.com/LiteLDev/LeviLamina
 
 #pragma once
 

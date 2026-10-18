@@ -1,4 +1,3 @@
-// From Levilamina - github.com/LiteLDev/LeviLamina/blob/main/src/mc/common/SharedCounter.h
 
 #pragma once
 
