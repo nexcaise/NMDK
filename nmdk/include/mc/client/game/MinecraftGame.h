@@ -5,5 +5,17 @@
 
 class MinecraftGame {
   public:
-    void _finishReloadingResources(::ResourcePackManager &mgr, bool fullVanillaPackOnStack);
+    void *_onResumeWaitReloadTextures();
+
+    void onActiveResourcePacksChanged(ResourcePackManager &);
+
+    void _loadInitialPackResources(ResourcePackManager &, bool);
+
+    void _finishReloadingResources(ResourcePackManager &, bool);
+
+    void _loadGlobalResourcePacks();
+
+    void cleanReloadMaterials();
+
+    void _beginReloadingResources();
 };

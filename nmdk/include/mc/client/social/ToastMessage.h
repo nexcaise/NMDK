@@ -5,5 +5,8 @@
 
 class ToastMessage {
   public:
-    CLASS_FIELD(::ToastMessageType, mType, 0x0C);
+    ::std::byte padding[0xC];
+    ::ToastMessageType mType;
+    ::std::string mTitle;
+    ::std::string mSubtitle;
 };
